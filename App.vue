@@ -18,11 +18,13 @@
 	.content {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
 		overflow: hidden;
 		flex: 1;
 	}
 	uni-page-wrapper {
+		display: flex;
+	}
+	uni-page-body {
 		display: flex;
 	}
 </style>

@@ -9,7 +9,16 @@
 				"navigationBarTitleText": "登录"
 			}
 		}
-	],
+	    ,{
+            "path" : "pages/index/Table",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "仓库",
+                "enablePullDownRefresh": true
+            }
+            
+        }
+    ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",

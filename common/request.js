@@ -11,7 +11,7 @@ request.globalRequest = (url, method, data) => {
 		mask:true,
 	})
 	let header = {}
-	let token = uni.getStorageSync('tonken');
+	let token = uni.getStorageSync('token');
 	header['Authorization'] = 'Bearer ' + token;
 	header['content-type'] = 'application/json';
 
