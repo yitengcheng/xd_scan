@@ -1,5 +1,5 @@
 import App from './App'
-import uView from "uview-ui";
+import uView from "@/uni_modules/uview-ui";
 import _ from 'lodash';
 import dayjs from 'dayjs';
 

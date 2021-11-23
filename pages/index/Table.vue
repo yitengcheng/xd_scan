@@ -1,34 +1,29 @@
 <template>
-	<scroll-view class="content" :scroll-y="true">
-		<u-sticky>
-			<view class="top">
-				<view class="top_box">
-					<u-button type="primary" size="mini" @click="showProductInfo">入库</u-button>
-				</view>
-				<u-subsection :current="currentIndex" :list="list" name="name" @change="changeIndex"></u-subsection>
+	<view class="content"  style="align-items: center;">
+		<view class="top_box">
+			<u-button type="primary" size="mini" @click="showProductInfo">入库</u-button>
+		</view>
+		<u-tabs :current="currentIndex" :list="list" @click="changeIndex" style="width: 100%;"></u-tabs>
+		<u-empty mode="list" text="暂无数据" v-if="productList.length === 0" />
+		<view v-for="(product, index) in productList" :key="index" @click="showInfo(product)" class="product_box">
+			<view class="product_row">
+				<view>编号：{{ product.id || '无' }}</view>
+				<view>产品名称：{{ product.name || '无' }}</view>
+				
 			</view>
-		</u-sticky>
-		<view v-if="productList.length !== 0" v-for="(product, index) in productList" :key="index" @click="(product) => {showInfoModal = true; selectObj = product}">
-			<view class="product_box">
-				<view class="product_row">
-					<view>编号：{{ product.id || '无' }}</view>
-					<view>产品名称：{{ product.name || '无' }}</view>
-					<view>购买/租赁：{{ product.payMethod || '无' }}</view>
-				</view>
-				<view class="product_row">
-					<view>mac地址：{{ product.macAddress || '无' }}</view>
-				</view>
-				<view class="product_row">
-					<view>收货地址：{{ product.retrievalAddress || '无' }}</view>
-				</view>
-				<view class="product_row">
-					<view>快递单号：{{ product.logisticsNumber || '无' }}</view>
-				</view>
+			<view class="product_row">
+				<view>购买/租赁：{{ product.payMethod || '无' }}</view>
+				<view>mac地址：{{ product.macAddress || '无' }}</view>
+			</view>
+			<view class="product_row">
+				<view>收货地址：{{ product.retrievalAddress || '无' }}</view>
+			</view>
+			<view class="product_row">
+				<view>快递单号：{{ product.logisticsNumber || '无' }}</view>
 			</view>
 			<u-divider>我是分割线</u-divider>
 		</view>
-		<u-empty mode="list" text="暂无数据" v-if="productList.length === 0" />
-		<u-popup v-model="showAddModal" mode="bottom">
+		<u-popup :show="showAddModal" mode="bottom" v-model="showAddModal" @close="() => showAddModal = false">
 			<u-form ref="addForm" :model="formAddData" :rules="addRules" label-width="180" class="product_form">
 				<u-form-item label="产品名称" prop="title" :required="true">
 					<u-input v-model="formAddData.title" placeholder="请输入产品名称" :clearable="true"></u-input>
@@ -42,15 +37,15 @@
 			</u-form>
 			<u-button type="primary" @click="addProduct">入库</u-button>
 		</u-popup>
-		<u-popup v-model="showInfoModal" mode="center">
+		<u-popup :show="showInfoModal" mode="center" v-model="showInfoModal" @close="() => {showInfoModal = false; selectObj = {}}" closeOnClickOverlay>
 			<u-form ref="infoForm" :model="formInfoData" :rules="infoRules" label-width="180" class="product_form">
 				<u-form-item label="快递单号" prop="logisticsNumber" :required="true">
-					<u-input v-model="formAddData.logisticsNumber" placeholder="请输入快递单号" :clearable="true"></u-input>
+					<u-input v-model="formInfoData.logisticsNumber" placeholder="请输入快递单号" :clearable="true"></u-input>
 				</u-form-item>
 				<u-button type="error" @click="outProduct" class="out_btn">出库</u-button>
 			</u-form>
 		</u-popup>
-	</scroll-view>
+	</view>
 </template>
 
 <script>
@@ -106,10 +101,10 @@
 				},
 				infoRules: {
 					logisticsNumber: [{
-							required: true,
-							message: '请输入快递单号',
-							trigger: ['change', 'blur'],
-						}]
+						required: true,
+						message: '请输入快递单号',
+						trigger: ['change', 'blur'],
+					}]
 				}
 			};
 		},
@@ -123,12 +118,18 @@
 			this.initProduct(this.pageNum);
 		},
 		methods: {
-			changeIndex(index) {
-				this.currentIndex = index;
-				this.status = this.list[index].value
+			changeIndex(e) {
+				this.currentIndex = e.index;
+				this.status = e.value
 				this.$nextTick(() => {
 					this.initProduct(1)
-				})
+				});
+			},
+			showInfo(product){
+				if(this.currentIndex === 1){
+					this.showInfoModal = true;
+					this.selectObj = product
+				}
 			},
 			initProduct(pageNum) {
 				api.products({
@@ -137,10 +138,13 @@
 					status: this.status,
 				}).then(res => {
 					uni.stopPullDownRefresh();
-					if (((res || {}).rows || []).length >= 0) {
-						let {
-							rows
-						} = res;
+					if(res?.total === 0){
+						this.productList = [];
+						this.pageNum = 1;
+						return;
+					}
+					if (res?.rows?.length > 0) {
+						let { rows } = res;
 						let tmp = [];
 						rows.forEach(row => {
 							tmp.push({
@@ -153,8 +157,7 @@
 							});
 						});
 						pageNum === 1 ? this.pageNum = pageNum + 1 : this.pageNum = this.pageNum + 1;
-						pageNum === 1 ? this.productList = tmp : this.productList = this._.concat(this.productList,
-							tmp);
+						pageNum === 1 ? this.productList = tmp : this.productList = this._.concat(this.productList,tmp);
 					}
 				});
 			},
@@ -176,14 +179,22 @@
 							},
 							success: (res) => {
 								let result = JSON.parse(res.data);
-								let { results } = result.data.ocr;
+								let {
+									results
+								} = result.data.ocr;
 								this.showAddModal = true;
-								this.formAddData.title = results[this._.findIndex(results, o => {return o.text === '产品名称：'}) + 1 ].text;
-								this.formAddData.model = results[this._.findIndex(results, o =>{return  o.text === '产品型号：'}) + 1 ].text;
+								this.formAddData.title = results[this._.findIndex(results, o => {
+									return o.text === '产品名称：'
+								}) + 1].text;
+								this.formAddData.model = results[this._.findIndex(results, o => {
+									return o.text === '产品型号：'
+								}) + 1].text;
 								let tmpmac = '';
-								let tmp = results[this._.findIndex(results, o => { return o.text === 'MAC地址：'}) + 1 ].text.split('');
+								let tmp = results[this._.findIndex(results, o => {
+									return o.text === 'MAC地址：'
+								}) + 1].text.split('');
 								tmp.forEach((chart, index) => {
-									if(index % 2 !== 0 && index + 1 !== tmp.length){
+									if (index % 2 !== 0 && index + 1 !== tmp.length) {
 										tmpmac = tmpmac + chart + ':';
 									} else {
 										tmpmac = tmpmac + chart;
@@ -198,37 +209,52 @@
 					}
 				})
 			},
-			addProduct(){
-				this.$refs.addForm.validate(valid => {
-					if(valid){
+			addProduct() {
+				this.$refs.addForm.validate().then(valid => {
+					if (valid) {
 						this.showAddModal = false;
 						api.addProduct({
 							productId: 1,
 							...this.formAddData
 						}).then(res => {
-							if((res || {}).data){
-								 uni.showAddModal({
-								 	title: '入库成功',
+							if ((res || {}).data) {
+								uni.showAddModal({
+									title: '入库成功',
 									content: `新增设备编号：${res.data}`,
-									showCancel:false,
+									showCancel: false,
 									success: () => {
 										this.initProduct(1);
 									}
-								 })
+								})
 							}
 						});
 					}
 				});
 			},
-			outProduct(){
-				this.$refs.infoForm.validate(valid => {
-					if(valid){
+			outProduct() {
+				this.$refs.infoForm.validate().then(valid => {
+					if (valid) {
 						api.outProduct({
-							leaseBeginTime: '',//租车起始时间
-							leaseEndTime: '',//租车结束时间
-							id: '',
-							logisticsNumber: '',
-						})
+							leaseBeginTime: this.dayjs().format('YYYY-MM-DD HH:mm:ss'), //设备租期起始时间
+							leaseEndTime: this.dayjs().add(this.selectObj.leaseTerm, 'month').format('YYYY-MM-DD HH:mm:ss'), //设备租期结束时间
+							id: this.selectObj.id,
+							logisticsNumber: this.formInfoData.logisticsNumber,
+						}).then(res => {
+							this.showInfoModal = false;
+							if(res.code == 200){
+								uni.showModal({
+									title: '提示',
+									content: '成功出库'
+								});
+							} else {
+								uni.showModal({
+									title: '提示',
+									content: res.msg,
+									showCancel: false,
+								});
+							}
+							
+						});
 					}
 				});
 			}
@@ -236,15 +262,14 @@
 	}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 	.top_box {
 		padding: 5px;
-		width: 100%;
+		width: 90%;
 	}
 
 	.product_box {
-		width: 100%;
-		height: 200rpx;
+		width: 90%;
 		display: flex;
 		flex-direction: column;
 		padding: 10px;
@@ -256,11 +281,11 @@
 		flex-direction: row;
 		justify-content: space-between;
 	}
-	
+
 	.product_form {
 		padding: 0px 10px 0px 10px
 	}
-	
+
 	.out_btn {
 		margin-bottom: 10px;
 	}

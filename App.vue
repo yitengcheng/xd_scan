@@ -13,7 +13,7 @@
 </script>
 
 <style lang="scss">
-	@import "uview-ui/index.scss";
+	@import "@/uni_modules/uview-ui/index.scss";
 	/*每个页面公共css */
 	.content {
 		display: flex;
@@ -23,8 +23,10 @@
 	}
 	uni-page-wrapper {
 		display: flex;
+		flex: 1;
 	}
 	uni-page-body {
 		display: flex;
+		flex: 1;
 	}
 </style>

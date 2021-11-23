@@ -1,6 +1,6 @@
 <template>
-	<view class="content">
-		<u-form ref="form" :model="formDate" label-width="140" class="login_form" :rules="rules">
+	<view class="content" style="align-items: center;">
+		<u-form ref="form" :model="formDate" label-width="80" class="login_form" :rules="rules">
 			<u-image src="/static/logo.png" width="80" height="80" class="head_img"></u-image>
 			<u-form-item label="用户名" prop="userName">
 				<u-input v-model="formDate.userName" placeholder="请输入用户名" :clearable="true"></u-input>
@@ -38,10 +38,10 @@
 		},
 		methods: {
 			login() {
-				this.$refs.form.validate(valid => {
-					if(valid){
+				this.$refs.form.validate().then(valid => {
+					if (valid) {
 						api.login(this.formDate).then(res => {
-							uni.setStorageSync('token' , res.token);
+							uni.setStorageSync('token', res.token);
 							uni.navigateTo({
 								url: '/pages/index/Table'
 							})
@@ -57,7 +57,7 @@
 	.login_form {
 		display: flex;
 		flex-direction: column;
-		margin-top: 300rpx;
+		margin-top: 200rpx;
 		width: 80%;
 		align-self: center;
 	}

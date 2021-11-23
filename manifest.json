@@ -68,5 +68,16 @@
     "uniStatistics" : {
         "enable" : false
     },
-    "vueVersion" : "2"
+    "vueVersion" : "2",
+    "h5" : {
+        "router" : {
+            "mode" : "history",
+            "base" : "/goods/"
+        },
+        "title" : "xd_goods",
+        "template" : "",
+        "devServer" : {
+            "port" : 80
+        }
+    }
 }
